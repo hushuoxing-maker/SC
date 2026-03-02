@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <meta charset="utf-8">
-<title>古月AI智能体·石材商业门头提示词灵感库（双语版左右对照）</title>
+<title>古月AI智能体·石材商业门头提示词灵感库（双语不重复版）</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",sans-serif;}
 body{background: linear-gradient(135deg, #F0F2F5 0%, #E5E6EB 100%);min-height:100vh;padding:20px 0 60px;}
@@ -29,8 +29,8 @@ body{background: linear-gradient(135deg, #F0F2F5 0%, #E5E6EB 100%);min-height:10
 </style>
 
 <div class="header">
-  <h1>🪨 古月AI智能体·石材商业门头提示词灵感库（双语左右对照）</h1>
-  <p>白天/夜晚｜门头大小多样｜条数可调｜高端写实｜中文左 / 英文右</p>
+  <h1>🪨 古月AI智能体·石材商业门头提示词灵感库（双语不重复版）</h1>
+  <p>白天/夜晚｜门头大小多样｜每组提示词都不重复｜中文左 / 英文右</p>
 </div>
 
 <div class="input-wrap">
@@ -54,21 +54,30 @@ body{background: linear-gradient(135deg, #F0F2F5 0%, #E5E6EB 100%);min-height:10
 <script>
 let allPrompts = [];
 const storeSizes = ["小型店铺","中型店铺","大型店铺","旗舰店"];
-const variants = [
-  "主营品类+高端质感标语","特色品类+大气稳重标语","招牌品类+高端精致标语",
-  "核心品类+大气质感文字","爆款品类+高端轻奢标语","主营项目+大气精致标语",
-  "特色项目+高端稳重文字","招牌项目+大气轻奢标语","核心项目+高端质感标语",
-  "爆款项目+大气高级文字","主营服务+高端精致标语","特色服务+大气稳重标语",
-  "招牌服务+高端轻奢文字","核心服务+大气质感标语","爆款服务+高端高级标语",
-  "主营产品+大气稳重文字","特色产品+高端精致标语","招牌产品+大气质感文字",
-  "核心产品+高端轻奢标语","爆款产品+大气高级标语"
-];
+const materials = ["大理石","花岗岩","砂岩","石材饰面","石材包边","金属精工字"];
+const fonts = ["稳重字体","现代简洁字体","轻奢字体","厚重字体","高端精致字体"];
+const lighting = ["日间自然光","夜晚背光字灯","石材氛围光","洗墙灯效果","8K高清灯光"];
+const slogans = ["高端质感标语","大气稳重标语","高端精致标语","大气质感文字","高端轻奢标语","大气高级标语","大气精美标语","高端独特标语","大气艺术标语","精致奢华标语"];
 
-function createPromptPair(industry, env, size, variant){
-  const envTextZh = env==="夜晚"?"夜晚环境，石材门头亮灯效果":"白天自然光";
-  const envTextEn = env==="夜晚"?"Night environment, stone facade lighting effect":"Daylight, stone facade";
-  const zh = `${envTextZh}，门头正立面，完整展示，正面平视视角，无透视畸变，无遮挡，${size}，${industry}店铺门头，大理石、花岗岩、石材饰面、石材包边、金属精工字，品牌店名+${variant}，稳重字体，8K高清，商业写实效果图，细节丰富，色彩自然，可直接施工参考`;
-  const en = `${envTextEn}, storefront facade, front view, eye-level, no distortion, unobstructed, ${size}, ${industry} store, marble, granite, stone finish, stone edging, metal crafted letters, brand logo + ${variant}, stable font, 8k, photorealistic, rich details, natural color, construction reference ready`;
+function getRandomItem(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function createPromptPair(industry, env){
+  const size = getRandomItem(storeSizes);
+  const material1 = getRandomItem(materials);
+  let material2;
+  do { material2=getRandomItem(materials); } while(material2===material1);
+  const font = getRandomItem(fonts);
+  const light = getRandomItem(lighting);
+  const slogan = getRandomItem(slogans);
+
+  const zhEnv = env==="夜晚"?"夜晚环境":"白天自然光";
+  const enEnv = env==="夜晚"?"Night environment":"Daylight";
+
+  const zh = `${zhEnv}，门头正立面，完整展示，正面平视视角，无透视畸变，无遮挡，${size}，${industry}店铺门头，${material1}、${material2}，${font}，品牌店名+${slogan}，${light}，商业写实效果图，细节丰富，色彩自然，可直接施工参考`;
+  const en = `${enEnv}, storefront facade, front view, eye-level, no distortion, unobstructed, ${size}, ${industry} store, ${material1}, ${material2}, ${font}, brand logo + ${slogan}, ${light}, photorealistic, rich details, natural color, construction reference ready`;
+
   return {zh,en};
 }
 
@@ -102,10 +111,15 @@ function generatePrompts(){
 
   setTimeout(()=>{
     let resultHtml="";
+    const usedCombos = new Set();
+
     for(let i=0;i<num;i++){
-      const size = storeSizes[i % storeSizes.length];
-      const variant = variants[i % variants.length];
-      const pair = createPromptPair(industry, env, size, variant);
+      let pair, key;
+      do {
+        pair = createPromptPair(industry, env);
+        key = pair.zh + pair.en;
+      } while(usedCombos.has(key));
+      usedCombos.add(key);
       allPrompts.push(pair);
 
       resultHtml+=`
@@ -122,6 +136,7 @@ function generatePrompts(){
         </div>
       </div>`;
     }
+
     resultHtml+=`<button class="copy-all-btn" onclick="copyAll()">📋 一键复制全部双语</button>`;
     resultWrap.innerHTML=resultHtml;
     genBtn.disabled=false;
